@@ -1,7 +1,7 @@
 import uuid
-
 import networkx as nx
 import matplotlib.pyplot as plt
+import heapq
 
 
 class Node:
@@ -9,15 +9,12 @@ class Node:
         self.left = None
         self.right = None
         self.val = key
-        self.color = color  # Додатковий аргумент для зберігання кольору вузла
-        self.id = str(uuid.uuid4())  # Унікальний ідентифікатор для кожного вузла
-
+        self.color = color
+        self.id = str(uuid.uuid4())
 
 def add_edges(graph, node, pos, x=0, y=0, layer=1):
     if node is not None:
-        graph.add_node(
-            node.id, color=node.color, label=node.val
-        )  # Використання id та збереження значення вузла
+        graph.add_node(node.id, color=node.color, label=node.val)
         if node.left:
             graph.add_edge(node.id, node.left.id)
             l = x - 1 / 2**layer
@@ -31,31 +28,38 @@ def add_edges(graph, node, pos, x=0, y=0, layer=1):
     return graph
 
 
-def draw_heap(heap_root):
-    heap = nx.DiGraph()
-    pos = {heap_root.id: (0, 0)}
-    heap = add_edges(heap, heap_root, pos)
+def draw_tree(tree_root):
+    tree = nx.DiGraph()
+    pos = {tree_root.id: (0, 0)}
+    tree = add_edges(tree, tree_root, pos)
 
-    colors = [node[1]["color"] for node in heap.nodes(data=True)]
-    labels = {
-        node[0]: node[1]["label"] for node in heap.nodes(data=True)
-    }  # Використовуйте значення вузла для міток
+    colors = [node[1]["color"] for node in tree.nodes(data=True)]
+    labels = {node[0]: node[1]["label"] for node in tree.nodes(data=True)}
 
     plt.figure(figsize=(8, 5))
     nx.draw(
-        heap, pos=pos, labels=labels, arrows=False, node_size=2500, node_color=colors
+        tree, pos=pos, labels=labels, arrows=False, node_size=2500, node_color=colors
     )
     plt.show()
 
 
-# Створення купи
-root = Node(0)
-root.left = Node(2)
-root.left.left = Node(5)
-root.left.right = Node(10)
-root.right = Node(1)
-root.right.left = Node(3)
-root.right.right = Node(7)
+def list_to_heap_tree(lst):
+    if not lst:
+        return None
 
-# Відображення купи
-draw_heap(root)
+    heapq.heapify(lst)
+
+    def build_tree(index):
+        if index >= len(lst):
+            return None
+        node = Node(lst[index])
+        node.left = build_tree(2 * index + 1)
+        node.right = build_tree(2 * index + 2)
+        return node
+
+    return build_tree(0)
+
+lst = [3, 9, 2, 1, 4, 5]
+heap_tree_root = list_to_heap_tree(lst)
+
+draw_tree(heap_tree_root)
